@@ -5,6 +5,7 @@
  *      Author: sguss
  */
 #include "main.h"
+#include "gpio.h"
 
 // FHRCK = 4 608 000 000
 // f = 102,4 kHz
@@ -35,22 +36,20 @@ void InitGpio_HRTIM(void){
 //    Gpio::Init<8,9>(GPIOC, Gpio::Mode::outputAF, Gpio::Type::PP, Gpio::Speed::veryHigh, Gpio::Pupd::pullDown, Gpio::AF::af3);
 
 	RCC->AHBENR  |= RCC_AHBENR_GPIOAEN;
-	// Alternative PP
+	RCC->AHBENR  |= RCC_AHBENR_GPIOCEN;
 
-	GPIOA->MODER   &= ~GPIO_MODER_MODER8;
-	GPIOA->MODER   |= GPIO_MODER_MODER8_1;
+//	void InitGPio( GPIO_TypeDef *port, unsigned int NumPin, Moder v_moder, OTyper v_type, Speed v_speed, Pupdr v_pupdr, AF v_af);
+	InitGPio(GPIOA, 8, alternateF, push_pull, veryHigh, pullDown, af13);
+	InitGPio(GPIOA, 9, alternateF, push_pull, veryHigh, pullDown, af13);
 
-	// Very high speed
-	GPIOA->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR8;
+	InitGPio(GPIOA, 10, alternateF, push_pull, veryHigh, pullDown, af13);
+	InitGPio(GPIOA, 11, alternateF, push_pull, veryHigh, pullDown, af13);
 
-	GPIOA->MODER   &= ~GPIO_MODER_MODER9;
-	GPIOA->MODER   |= GPIO_MODER_MODER9_1;
-	GPIOA->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR9;
-	// PA8 and PA9 - AF13
-	GPIOA->AFR[1] |= 0xDD;
-
+	InitGPio(GPIOC, 8, alternateF, push_pull, veryHigh, pullDown, af3);
+	InitGPio(GPIOC, 9, alternateF, push_pull, veryHigh, pullDown, af3);
 }
-void InitHRPWM (void) {
+
+void InitHRPWM_buck_3phase (void) {
 	uint32_t Ready=0;
 	uint8_t  tick=0;
 

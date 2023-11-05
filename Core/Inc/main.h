@@ -27,11 +27,10 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f3xx_hal.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stm32f3xx.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -49,13 +48,12 @@ extern "C" {
 
 /* USER CODE END EM */
 
-void HAL_HRTIM_MspPostInit(HRTIM_HandleTypeDef *hhrtim);
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
+void SystemUp_F334(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
