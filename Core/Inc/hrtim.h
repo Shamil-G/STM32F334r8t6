@@ -29,13 +29,13 @@
 
 #define HRTIM_INDEX_TIMER_A 0
 #define HRTIM_INDEX_TIMER_B 1
-#define HRTIM_INDEX_TIMER_C 2
-#define HRTIM_INDEX_TIMER_D 3
+//#define HRTIM_INDEX_TIMER_C 2
+//#define HRTIM_INDEX_TIMER_D 3
 #define HRTIM_INDEX_TIMER_E 4
 
 
 volatile uint16_t multiPhasePeriodHRTIM = PeriodTimer;
-volatile int16_t  currentDutyHRTIM = 1000;
+volatile int16_t  currentDutyHRTIM = 8000;
 volatile uint16_t phase_shift = 0;
 volatile uint16_t repetition_rate = 0;
 volatile int8_t   activeTimer[] = {HRTIM_INDEX_TIMER_A, HRTIM_INDEX_TIMER_B, HRTIM_INDEX_TIMER_C};

@@ -1,6 +1,6 @@
 #include "main.h"
 
-//#define USE_SYSTICK
+#define USE_SYSTICK
 
 #ifdef USE_SYSTICK
 

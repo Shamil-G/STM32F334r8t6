@@ -8,6 +8,9 @@
 #ifndef INC_SYSTICK_H_
 #define INC_SYSTICK_H_
 
+extern uint32_t ticks_delay;
+
+void init_SysTick();
 void Delay(uint32_t sleep);
 
 int8_t getTimer(uint32_t sleep);

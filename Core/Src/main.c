@@ -18,7 +18,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
+#include "SysTick.h"
+#include "led.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -49,6 +50,12 @@
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 void PllOn_F334(void);
+void enable_led1();
+void initHRTIM_3phase(void);
+void startHRTIM(void);
+void freq_up(uint16_t delta_period);
+void freq_down(uint16_t delta_period);
+void duty_down(uint16_t duty);
 
 /* USER CODE END PFP */
 
@@ -64,8 +71,11 @@ void PllOn_F334(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	SystemUp_F334();
 	//  PllOn_F334();
+	SystemUp_F334();
+	init_SysTick();
+	enable_led1();
+	initHRTIM_3phase();
 
   /* USER CODE END 1 */
 
@@ -93,10 +103,16 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  ticks_delay=0;
+  startHRTIM();
   while (1)
   {
+	if(ticks_delay>=500){
+		LED1_TOGGLE;
+		ticks_delay=0;
+//		freq_up(1000);
+    }
     /* USER CODE END WHILE */
-
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

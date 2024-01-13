@@ -18,12 +18,18 @@ void InitGpio_HRTIM(void){
     * PA9  - HRPWM channel A output 2
     * PA10 - HRPWM channel B output 1
     * PA11 - HRPWM channel B output 2
+    * PB12 - HRPWM channel C output 1
+    * PB13 - HRPWM channel C output 2
+    * PB14 - HRPWM channel D output 1
+    * PB15 - HRPWM channel D output 2
     * PC8  - HRPWM channel E output 1
     * PC9  - HRPWM channel E output 2
     *
     */
 //    Gpio::Init<8,9>(GPIOA, Gpio::Mode::outputAF, Gpio::Type::PP, Gpio::Speed::veryHigh, Gpio::Pupd::pullDown, Gpio::AF::af13);
 //    Gpio::Init<10,11>(GPIOA, Gpio::Mode::outputAF, Gpio::Type::PP, Gpio::Speed::veryHigh, Gpio::Pupd::pullDown, Gpio::AF::af13);
+//    Gpio::Init<12,13>(GPIOB, Gpio::Mode::outputAF, Gpio::Type::PP, Gpio::Speed::veryHigh, Gpio::Pupd::pullDown, Gpio::AF::af13);
+//    Gpio::Init<14,15>(GPIOB, Gpio::Mode::outputAF, Gpio::Type::PP, Gpio::Speed::veryHigh, Gpio::Pupd::pullDown, Gpio::AF::af13);
 //    Gpio::Init<8,9>(GPIOC, Gpio::Mode::outputAF, Gpio::Type::PP, Gpio::Speed::veryHigh, Gpio::Pupd::pullDown, Gpio::AF::af3);
 
 	RCC->AHBENR  |= RCC_AHBENR_GPIOAEN;
@@ -40,6 +46,7 @@ void InitGpio_HRTIM(void){
 	InitGPio(GPIOC, 9, alternateF, push_pull, veryHigh, pullDown, af3);
 }
 
+// STEP 2
 void set_timing(){
 	HRTIM1->sMasterRegs.MPER = multiPhasePeriodHRTIM;
 	HRTIM1->sMasterRegs.MREP = REPETITON_RATE; /* 1 ISR every REPETITON_RATE PWM periods */
@@ -66,6 +73,10 @@ void set_timing(){
 			HRTIM1->sTimerxRegs[index_timer].CMP1xR = currentDutyHRTIM;  	// Set starting duty
 			HRTIM1->sTimerxRegs[index_timer].RSTx1R = HRTIM_RST1R_CMP1;	// Событие Таймера COMPARE 1 переводит выход в неактивное состояние для канала [i].
 
+			HRTIM1->sTimerxRegs[index_timer].OUTxR = HRTIM_OUTR_FAULT2_1 + HRTIM_OUTR_IDLM2;
+			HRTIM1->sTimerxRegs[index_timer].FLTxR = HRTIM_FLTR_FLT1EN;
+
+
 			HRTIM1->sTimerxRegs[index_timer].REPxR = repetition_rate;
 			HRTIM1->sTimerxRegs[index_timer].TIMxCR = HRTIM_TIMCR_MSTU 	// Обновление регистра инииируется Master таймером
 													+ HRTIM_TIMCR_CONT
@@ -86,6 +97,7 @@ void set_timing(){
 	}
 }
 
+// STEP 1
 void initHRTIM_3phase(void) {
 	uint32_t Ready=0;
 	uint8_t  tick=0, index_timer;
@@ -106,6 +118,7 @@ void initHRTIM_3phase(void) {
 		* Setting Master timer for period (frequency) and comparator for phase shift
 		***********************************************/
     	phase_shift = multiPhasePeriodHRTIM / currentCountPhaseHRTIM;
+    	// STEP 2
     	set_timing();
 
 //    	HRTIM1->sMasterRegs.MPER = multiPhasePeriodHRTIM;
@@ -216,6 +229,16 @@ void initHRTIM_3phase(void) {
 		/* ---------------------------------------------------------- */
 		/* FAULT1 global init: no filter, low polarity, Fault1 enable */
 		/* ---------------------------------------------------------- */
+		// SET Fflts=Fhrtim/2 = 144 / 2
+		HRTIM1->sCommonRegs.FLTINR2 = HRTIM_FLTINR2_FLTSD_0;
+		// SET Fflt1f = Fflts/4 & N=8 : 0111 -> 222ns
+		HRTIM1->sCommonRegs.FLTINR1 = HRTIM_FLTINR1_FLT1F_2 | HRTIM_FLTINR1_FLT1F_1 | HRTIM_FLTINR1_FLT1F_0;
+		// SELECT FAULT SRC in HRTIM_FLTINR1
+		// FAULT1 = PA12 (FLTxSRC=0): COMP2 (FLTxSRC=1),
+		// FAULT2 = PA15            : COMP4
+		// FAULT3 = PB10			: COMP6
+		// FAULT4 = PB11
+		// FAULT5 = PC7
 		HRTIM1->sCommonRegs.FLTINR1 = HRTIM_FLTINR1_FLT1E;
 
 		/* Force register update before starting */
@@ -236,9 +259,8 @@ void initHRTIM_3phase(void) {
     }
 }
 
-/* -------------- */
+// STEP 3
 /* HRTIM start-up */
-/* -------------- */
 void startHRTIM(){
 	HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TA1OEN | HRTIM_OENR_TA2OEN;  // Enable output PWM channel A
 	HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TB1OEN | HRTIM_OENR_TB2OEN;  // Enable output PWM channel B
