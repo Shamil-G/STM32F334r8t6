@@ -29,20 +29,20 @@
 
 #define HRTIM_INDEX_TIMER_A 0
 #define HRTIM_INDEX_TIMER_B 1
-//#define HRTIM_INDEX_TIMER_C 2
-//#define HRTIM_INDEX_TIMER_D 3
+#define HRTIM_INDEX_TIMER_C 2
+#define HRTIM_INDEX_TIMER_D 3
 #define HRTIM_INDEX_TIMER_E 4
 
 
-volatile uint16_t multiPhasePeriodHRTIM = PeriodTimer;
-volatile int16_t  currentDutyHRTIM = 8000;
-volatile uint16_t phase_shift = 0;
+volatile uint16_t HRTIM_FULL_PERIOD = PeriodTimer;
+volatile uint16_t CHANNEL_PERIOD = 0;
+volatile int16_t  CHANNEL_DUTY = 8000;
 volatile uint16_t repetition_rate = 0;
-volatile int8_t   activeTimer[] = {HRTIM_INDEX_TIMER_A, HRTIM_INDEX_TIMER_B, HRTIM_INDEX_TIMER_C};
-volatile uint8_t  currentCountPhaseHRTIM = sizeof(activeTimer);
+int8_t   activeTimer[] = {HRTIM_INDEX_TIMER_A, HRTIM_INDEX_TIMER_B, HRTIM_INDEX_TIMER_C, HRTIM_INDEX_TIMER_D};
+volatile uint8_t  COUNT_HRTIM_CHANNEL = sizeof(activeTimer);
 
 
-void initHRTIM_3phase();
+void initHRTIM();
 void startHRTIM();
 
 

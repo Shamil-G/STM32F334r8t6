@@ -16,24 +16,30 @@ void InitGpio_HRTIM(void){
     *
     * PA8  - HRPWM channel A output 1
     * PA9  - HRPWM channel A output 2
+      Gpio::Init<8,9>(GPIOA, Gpio::Mode::outputAF, Gpio::Type::PP, Gpio::Speed::veryHigh, Gpio::Pupd::pullDown, Gpio::AF::af13);
+
     * PA10 - HRPWM channel B output 1
     * PA11 - HRPWM channel B output 2
+      Gpio::Init<10,11>(GPIOA, Gpio::Mode::outputAF, Gpio::Type::PP, Gpio::Speed::veryHigh, Gpio::Pupd::pullDown, Gpio::AF::af13);
+
     * PB12 - HRPWM channel C output 1
     * PB13 - HRPWM channel C output 2
+      Gpio::Init<12,13>(GPIOB, Gpio::Mode::outputAF, Gpio::Type::PP, Gpio::Speed::veryHigh, Gpio::Pupd::pullDown, Gpio::AF::af13);
+
     * PB14 - HRPWM channel D output 1
     * PB15 - HRPWM channel D output 2
+      Gpio::Init<14,15>(GPIOB, Gpio::Mode::outputAF, Gpio::Type::PP, Gpio::Speed::veryHigh, Gpio::Pupd::pullDown, Gpio::AF::af13);
+
     * PC8  - HRPWM channel E output 1
     * PC9  - HRPWM channel E output 2
+      Gpio::Init<8,9>(GPIOC, Gpio::Mode::outputAF, Gpio::Type::PP, Gpio::Speed::veryHigh, Gpio::Pupd::pullDown, Gpio::AF::af3);
+
     *
     */
-//    Gpio::Init<8,9>(GPIOA, Gpio::Mode::outputAF, Gpio::Type::PP, Gpio::Speed::veryHigh, Gpio::Pupd::pullDown, Gpio::AF::af13);
-//    Gpio::Init<10,11>(GPIOA, Gpio::Mode::outputAF, Gpio::Type::PP, Gpio::Speed::veryHigh, Gpio::Pupd::pullDown, Gpio::AF::af13);
-//    Gpio::Init<12,13>(GPIOB, Gpio::Mode::outputAF, Gpio::Type::PP, Gpio::Speed::veryHigh, Gpio::Pupd::pullDown, Gpio::AF::af13);
-//    Gpio::Init<14,15>(GPIOB, Gpio::Mode::outputAF, Gpio::Type::PP, Gpio::Speed::veryHigh, Gpio::Pupd::pullDown, Gpio::AF::af13);
-//    Gpio::Init<8,9>(GPIOC, Gpio::Mode::outputAF, Gpio::Type::PP, Gpio::Speed::veryHigh, Gpio::Pupd::pullDown, Gpio::AF::af3);
 
 	RCC->AHBENR  |= RCC_AHBENR_GPIOAEN;
-	RCC->AHBENR  |= RCC_AHBENR_GPIOCEN;
+	RCC->AHBENR  |= RCC_AHBENR_GPIOBEN;
+//	RCC->AHBENR  |= RCC_AHBENR_GPIOCEN;
 
 //	void InitGPio( GPIO_TypeDef *port, unsigned int NumPin, Moder v_moder, OTyper v_type, Speed v_speed, Pupdr v_pupdr, AF v_af);
 	InitGPio(GPIOA, 8, alternateF, push_pull, veryHigh, pullDown, af13);
@@ -42,13 +48,20 @@ void InitGpio_HRTIM(void){
 	InitGPio(GPIOA, 10, alternateF, push_pull, veryHigh, pullDown, af13);
 	InitGPio(GPIOA, 11, alternateF, push_pull, veryHigh, pullDown, af13);
 
-	InitGPio(GPIOC, 8, alternateF, push_pull, veryHigh, pullDown, af3);
-	InitGPio(GPIOC, 9, alternateF, push_pull, veryHigh, pullDown, af3);
+	InitGPio(GPIOB, 12, alternateF, push_pull, veryHigh, pullDown, af13);
+	InitGPio(GPIOB, 13, alternateF, push_pull, veryHigh, pullDown, af13);
+
+	InitGPio(GPIOB, 14, alternateF, push_pull, veryHigh, pullDown, af13);
+	InitGPio(GPIOB, 15, alternateF, push_pull, veryHigh, pullDown, af13);
+
+//  Channel E do not work
+//	InitGPio(GPIOC, 8, alternateF, push_pull, veryHigh, pullDown, af3);
+//	InitGPio(GPIOC, 9, alternateF, push_pull, veryHigh, pullDown, af3);
 }
 
 // STEP 2
 void set_timing(){
-	HRTIM1->sMasterRegs.MPER = multiPhasePeriodHRTIM;
+	HRTIM1->sMasterRegs.MPER = HRTIM_FULL_PERIOD;
 	HRTIM1->sMasterRegs.MREP = REPETITON_RATE; /* 1 ISR every REPETITON_RATE PWM periods */
 	HRTIM1->sMasterRegs.MCR = HRTIM_MCR_CONT + HRTIM_MCR_PREEN + HRTIM_MCR_MREPU;
 	// Master Repetition Interrupt Enable
@@ -56,21 +69,21 @@ void set_timing(){
 
 	/* Set compare registers for phase-shifts in master timer */
 	/* Each compare is coding for the phase-shift of one phase */
-	HRTIM1->sMasterRegs.MPER   = multiPhasePeriodHRTIM;           // Period for master timer
-	HRTIM1->sMasterRegs.MCMP1R = (currentCountPhaseHRTIM>=1)?phase_shift:0;    // When using 1 phase with 180 deg
-	HRTIM1->sMasterRegs.MCMP2R = (currentCountPhaseHRTIM>=2)?phase_shift*2:0;; // When using 2 phase with 120 deg for channel
-	HRTIM1->sMasterRegs.MCMP3R = (currentCountPhaseHRTIM>=3)?phase_shift*3:0;  // When using 3 phase with 90  deg for channel
-	HRTIM1->sMasterRegs.MCMP4R = (currentCountPhaseHRTIM==4)?phase_shift*4:0;  // When using 4 phase with 72  deg for channel
+	HRTIM1->sMasterRegs.MPER   = HRTIM_FULL_PERIOD;           // Period for master timer
+	HRTIM1->sMasterRegs.MCMP1R = (COUNT_HRTIM_CHANNEL>=1)?CHANNEL_PERIOD:0;    // When using 1 phase with 180 deg
+	HRTIM1->sMasterRegs.MCMP2R = (COUNT_HRTIM_CHANNEL>=2)?CHANNEL_PERIOD*2:0;; // When using 2 phase with 120 deg for channel
+	HRTIM1->sMasterRegs.MCMP3R = (COUNT_HRTIM_CHANNEL>=3)?CHANNEL_PERIOD*3:0;  // When using 3 phase with 90  deg for channel
+	HRTIM1->sMasterRegs.MCMP4R = (COUNT_HRTIM_CHANNEL==4)?CHANNEL_PERIOD*4:0;  // When using 4 phase with 72  deg for channel
 
 	/************************************************
 	*                          Setting Period For Timer A..E
 	***********************************************/
-	for(int8_t i=0, index_timer=0; i<currentCountPhaseHRTIM; i++){
+	for(int8_t i=0, index_timer=0; i<COUNT_HRTIM_CHANNEL; i++){
 		// Set period for timer A..E
 		index_timer = activeTimer[i];
 		if(index_timer!=-1){
-			HRTIM1->sTimerxRegs[index_timer].PERxR  = multiPhasePeriodHRTIM - 1 - ADC_CONVERSION_TIME;
-			HRTIM1->sTimerxRegs[index_timer].CMP1xR = currentDutyHRTIM;  	// Set starting duty
+			HRTIM1->sTimerxRegs[index_timer].PERxR  = HRTIM_FULL_PERIOD - 1 - ADC_CONVERSION_TIME;
+			HRTIM1->sTimerxRegs[index_timer].CMP1xR = CHANNEL_DUTY;  	// Set starting duty
 			HRTIM1->sTimerxRegs[index_timer].RSTx1R = HRTIM_RST1R_CMP1;	// Событие Таймера COMPARE 1 переводит выход в неактивное состояние для канала [i].
 
 			HRTIM1->sTimerxRegs[index_timer].OUTxR = HRTIM_OUTR_FAULT2_1 + HRTIM_OUTR_IDLM2;
@@ -89,16 +102,16 @@ void set_timing(){
 	/* ------------------------------------------- */
 	/* ADC trigger intialization (with CMP2 event) */
 	/* ------------------------------------------- */
-	for(int8_t i=0, index_timer=0; i<currentCountPhaseHRTIM; i++){
+	for(int8_t i=0, index_timer=0; i<COUNT_HRTIM_CHANNEL; i++){
 		index_timer = activeTimer[i];
 		if(index_timer!=-1){
-			HRTIM1->sTimerxRegs[i].CMP2xR = currentDutyHRTIM/2; /* Выборка будет проводится на середине периода (50% of Ton time) */
+			HRTIM1->sTimerxRegs[index_timer].CMP2xR = CHANNEL_DUTY/2; /* Выборка будет проводится на середине периода (50% of Ton time) */
 		}
 	}
 }
 
 // STEP 1
-void initHRTIM_3phase(void) {
+void initHRTIM(void) {
 	uint32_t Ready=0;
 	uint8_t  tick=0, index_timer;
 
@@ -117,11 +130,11 @@ void initHRTIM_3phase(void) {
     	/************************************************
 		* Setting Master timer for period (frequency) and comparator for phase shift
 		***********************************************/
-    	phase_shift = multiPhasePeriodHRTIM / currentCountPhaseHRTIM;
+    	CHANNEL_PERIOD = HRTIM_FULL_PERIOD / COUNT_HRTIM_CHANNEL;
     	// STEP 2
     	set_timing();
 
-//    	HRTIM1->sMasterRegs.MPER = multiPhasePeriodHRTIM;
+//    	HRTIM1->sMasterRegs.MPER = HRTIM_FULL_PERIOD;
 //		HRTIM1->sMasterRegs.MREP = REPETITON_RATE; /* 1 ISR every REPETITON_RATE PWM periods */
 //		HRTIM1->sMasterRegs.MCR = HRTIM_MCR_CONT + HRTIM_MCR_PREEN + HRTIM_MCR_MREPU;
 //		// Master Repetition Interrupt Enable
@@ -129,21 +142,21 @@ void initHRTIM_3phase(void) {
 //
 //		/* Set compare registers for phase-shifts in master timer */
 //		/* Each compare is coding for the phase-shift of one phase */
-//		HRTIM1->sMasterRegs.MPER   = multiPhasePeriodHRTIM;           // Period for master timer
-//		HRTIM1->sMasterRegs.MCMP1R = (currentCountPhaseHRTIM>=1)?phase_shift:0;    // When using 1 phase with 180 deg
-//		HRTIM1->sMasterRegs.MCMP2R = (currentCountPhaseHRTIM>=2)?phase_shift*2:0;; // When using 2 phase with 120 deg for channel
-//		HRTIM1->sMasterRegs.MCMP3R = (currentCountPhaseHRTIM>=3)?phase_shift*3:0;  // When using 3 phase with 90  deg for channel
-//		HRTIM1->sMasterRegs.MCMP4R = (currentCountPhaseHRTIM==4)?phase_shift*4:0;  // When using 4 phase with 72  deg for channel
+//		HRTIM1->sMasterRegs.MPER   = HRTIM_FULL_PERIOD;           // Period for master timer
+//		HRTIM1->sMasterRegs.MCMP1R = (COUNT_HRTIM_CHANNEL>=1)?phase_shift:0;    // When using 1 phase with 180 deg
+//		HRTIM1->sMasterRegs.MCMP2R = (COUNT_HRTIM_CHANNEL>=2)?phase_shift*2:0;; // When using 2 phase with 120 deg for channel
+//		HRTIM1->sMasterRegs.MCMP3R = (COUNT_HRTIM_CHANNEL>=3)?phase_shift*3:0;  // When using 3 phase with 90  deg for channel
+//		HRTIM1->sMasterRegs.MCMP4R = (COUNT_HRTIM_CHANNEL==4)?phase_shift*4:0;  // When using 4 phase with 72  deg for channel
 //
 //    	/************************************************
 //		*                          Setting Period For Timer A..E
 //		***********************************************/
-//		for(int8_t i=0; i<currentCountPhaseHRTIM; i++){
+//		for(int8_t i=0; i<COUNT_HRTIM_CHANNEL; i++){
 //			// Set period for timer A..E
 //			index_timer = activeTimer[i];
 //			if(index_timer!=-1){
-//				HRTIM1->sTimerxRegs[index_timer].PERxR  = multiPhasePeriodHRTIM - 1 - ADC_CONVERSION_TIME;
-//				HRTIM1->sTimerxRegs[index_timer].CMP1xR = currentDutyHRTIM;  	// Set starting duty
+//				HRTIM1->sTimerxRegs[index_timer].PERxR  = HRTIM_FULL_PERIOD - 1 - ADC_CONVERSION_TIME;
+//				HRTIM1->sTimerxRegs[index_timer].CMP1xR = CHANNEL_DUTY;  	// Set starting duty
 //				HRTIM1->sTimerxRegs[index_timer].RSTx1R = HRTIM_RST1R_CMP1;	// Событие Таймера COMPARE 1 переводит выход в неактивное состояние для канала [i].
 //
 //				HRTIM1->sTimerxRegs[index_timer].REPxR = repetition_rate;
@@ -155,26 +168,26 @@ void initHRTIM_3phase(void) {
 //			}
 //
 //		}
-		HRTIM1->sTimerxRegs[0].RSTxR  |= HRTIM_RSTR_MSTPER;     // Счетчик таймера сбрасывается при событии периода главного таймера.
-		HRTIM1->sTimerxRegs[0].SETx1R |= HRTIM_SET1R_MSTPER;    // Event forces the output to active state for channel A
+		HRTIM1->sTimerxRegs[activeTimer[0]].RSTxR  |= HRTIM_RSTR_MSTPER;     // Счетчик таймера сбрасывается при событии периода главного таймера.
+		HRTIM1->sTimerxRegs[activeTimer[0]].SETx1R |= HRTIM_SET1R_MSTPER;    // Event forces the output to active state for channel A
 		/*
 		* Start and stop event/comparator
 		*/
-		if(currentCountPhaseHRTIM>1){
-			HRTIM1->sTimerxRegs[1].RSTxR  |= HRTIM_RSTR_MSTCMP1;    // Счетчик таймера сбрасывается при событии периода CMP 1.
-			HRTIM1->sTimerxRegs[1].SETx1R |= HRTIM_SET1R_MSTCMP1;   // Событие таймера Compare 1 переводит выход в активное состояние.
+		if(COUNT_HRTIM_CHANNEL>1){
+			HRTIM1->sTimerxRegs[activeTimer[1]].RSTxR  |= HRTIM_RSTR_MSTCMP1;    // Счетчик таймера сбрасывается при событии периода CMP 1.
+			HRTIM1->sTimerxRegs[activeTimer[1]].SETx1R |= HRTIM_SET1R_MSTCMP1;   // Событие таймера Compare 1 переводит выход в активное состояние.
 //			HRTIM1->sTimerxRegs[1].RSTx1R |= HRTIM_RST1R_CMP1;      // Event forces the output to inactive state for channel B
-			if(currentCountPhaseHRTIM>2){
-				HRTIM1->sTimerxRegs[2].RSTxR  |= HRTIM_RSTR_MSTCMP2;    // Счетчик таймера сбрасывается при событии периода CMP 2
-				HRTIM1->sTimerxRegs[2].SETx1R |= HRTIM_SET1R_MSTCMP2;   // Событие таймера Compare 2 переводит выход в активное состояние.
+			if(COUNT_HRTIM_CHANNEL>2){
+				HRTIM1->sTimerxRegs[activeTimer[2]].RSTxR  |= HRTIM_RSTR_MSTCMP2;    // Счетчик таймера сбрасывается при событии периода CMP 2
+				HRTIM1->sTimerxRegs[activeTimer[2]].SETx1R |= HRTIM_SET1R_MSTCMP2;   // Событие таймера Compare 2 переводит выход в активное состояние.
 //				HRTIM1->sTimerxRegs[4].RSTx1R |= HRTIM_RST1R_CMP1;      // Event forces the output to inactive state for channel E
-				if(currentCountPhaseHRTIM>3){
-					HRTIM1->sTimerxRegs[3].RSTxR  |= HRTIM_RSTR_MSTCMP3;    // Счетчик таймера сбрасывается при событии периода CMP 3
-					HRTIM1->sTimerxRegs[3].SETx1R |= HRTIM_SET1R_MSTCMP3;   // Событие таймера Compare 3 переводит выход в активное состояние.
+				if(COUNT_HRTIM_CHANNEL>3){
+					HRTIM1->sTimerxRegs[activeTimer[3]].RSTxR  |= HRTIM_RSTR_MSTCMP3;    // Счетчик таймера сбрасывается при событии периода CMP 3
+					HRTIM1->sTimerxRegs[activeTimer[3]].SETx1R |= HRTIM_SET1R_MSTCMP3;   // Событие таймера Compare 3 переводит выход в активное состояние.
 	//				HRTIM1->sTimerxRegs[4].RSTx1R |= HRTIM_RST1R_CMP1;      // Event forces the output to inactive state for channel E
-					if(currentCountPhaseHRTIM>4){
-						HRTIM1->sTimerxRegs[4].RSTxR  |= HRTIM_RSTR_MSTCMP4;    // Счетчик таймера сбрасывается при событии периода CMP 4
-						HRTIM1->sTimerxRegs[4].SETx1R |= HRTIM_SET1R_MSTCMP4;   // Событие таймера Compare 4 переводит выход в активное состояние.
+					if(COUNT_HRTIM_CHANNEL>4){
+						HRTIM1->sTimerxRegs[activeTimer[4]].RSTxR  |= HRTIM_RSTR_MSTCMP4;    // Счетчик таймера сбрасывается при событии периода CMP 4
+						HRTIM1->sTimerxRegs[activeTimer[4]].SETx1R |= HRTIM_SET1R_MSTCMP4;   // Событие таймера Compare 4 переводит выход в активное состояние.
 		//				HRTIM1->sTimerxRegs[4].RSTx1R |= HRTIM_RST1R_CMP1;      // Event forces the output to inactive state for channel E
 					}
 				}
@@ -195,26 +208,26 @@ void initHRTIM_3phase(void) {
 		/*
 		* Setting to dead time for complementary output
 		*/
-		for(int8_t i=0; i<currentCountPhaseHRTIM; i++){
+		for(int8_t i=0; i<COUNT_HRTIM_CHANNEL; i++){
 			// Enable dead-time
 			index_timer = activeTimer[i];
 			if(index_timer!=-1){
-				HRTIM1->sTimerxRegs[i].OUTxR |= HRTIM_OUTR_DTEN;
+				HRTIM1->sTimerxRegs[index_timer].OUTxR |= HRTIM_OUTR_DTEN;
 				// Tdtg = (2exp((DTPRSC[2:0])))) x (Thrtim / 8)
 				// For DTPRSC[2:0] = 3 => Tdtg = (2*2*2)/(144Mhz * 8) = 6.94 ns (RefManual 0364, 650-651 page)
-				HRTIM1->sTimerxRegs[i].DTxR  |= HRTIM_DTR_DTPRSC_0 | HRTIM_DTR_DTPRSC_1;
+				HRTIM1->sTimerxRegs[index_timer].DTxR  |= HRTIM_DTR_DTPRSC_0 | HRTIM_DTR_DTPRSC_1;
 				// Set dead-time rising and falling Tdtr = DTR[8:0] * Tdtg = 15 * 6.94 = 104 ns
-				HRTIM1->sTimerxRegs[i].DTxR  |= (15 << HRTIM_DTR_DTR_Pos) | (15 << HRTIM_DTR_DTF_Pos);
-				HRTIM1->sTimerxRegs[i].DTxR  |= HRTIM_DTR_DTFSLK | HRTIM_DTR_DTRSLK;                    // Lock value dead-time
+				HRTIM1->sTimerxRegs[index_timer].DTxR  |= (15 << HRTIM_DTR_DTR_Pos) | (15 << HRTIM_DTR_DTF_Pos);
+				HRTIM1->sTimerxRegs[index_timer].DTxR  |= HRTIM_DTR_DTFSLK | HRTIM_DTR_DTRSLK;                    // Lock value dead-time
 			}
 		}
 		/* ------------------------------------------- */
 		/* ADC trigger intialization (with CMP2 event) */
 		/* ------------------------------------------- */
-//		for(int8_t i=0; i<currentCountPhaseHRTIM; i++){
+//		for(int8_t i=0; i<COUNT_HRTIM_CHANNEL; i++){
 //			index_timer = activeTimer[i];
 //			if(index_timer!=-1){
-//				HRTIM1->sTimerxRegs[i].CMP2xR = currentDutyHRTIM/2; /* Samples at 50% of Ton time */
+//				HRTIM1->sTimerxRegs[i].CMP2xR = CHANNEL_DUTY/2; /* Samples at 50% of Ton time */
 //			}
 //		}
 		HRTIM1->sCommonRegs.CR1 = 0; /* ADC trigger 1 update source: Master - тогда один ADC для всех каналов, сдвинутых по фазе*/
@@ -262,31 +275,39 @@ void initHRTIM_3phase(void) {
 // STEP 3
 /* HRTIM start-up */
 void startHRTIM(){
-	HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TA1OEN | HRTIM_OENR_TA2OEN;  // Enable output PWM channel A
-	HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TB1OEN | HRTIM_OENR_TB2OEN;  // Enable output PWM channel B
-	HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TC1OEN | HRTIM_OENR_TC2OEN;  // Enable output PWM channel E
+//	HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TA1OEN | HRTIM_OENR_TA2OEN;  // Enable output PWM channel A
+//	HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TB1OEN | HRTIM_OENR_TB2OEN;  // Enable output PWM channel B
+//	HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TC1OEN | HRTIM_OENR_TC2OEN;  // Enable output PWM channel E
+//	HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TD1OEN | HRTIM_OENR_TD2OEN;  // Enable output PWM channel E
+//	HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TE1OEN | HRTIM_OENR_TE2OEN;  // Enable output PWM channel E
+	uint8_t  index_timer;
+	for(int8_t i=0; i<COUNT_HRTIM_CHANNEL; i++){
+		// Enable dead-time
+		index_timer = activeTimer[i];
+		HRTIM1->sCommonRegs.OENR |= 0b11 << index_timer*2;
+	}
 	/*
 	* Start Master timer and PWM signal to channel [i]
 	*/
-	HRTIM1->sMasterRegs.MCR |= HRTIM_MCR_MCEN | HRTIM_MCR_TACEN | HRTIM_MCR_TBCEN | HRTIM_MCR_TCCEN;
+	HRTIM1->sMasterRegs.MCR |= HRTIM_MCR_MCEN | HRTIM_MCR_TACEN | HRTIM_MCR_TBCEN | HRTIM_MCR_TCCEN | HRTIM_MCR_TDCEN; // | HRTIM_MCR_TECEN;
 }
 
 
 void freq_down(uint16_t delta_period) {
 	uint8_t upd = 0;
-	uint16_t d_duty = 	phase_shift/currentDutyHRTIM;
-	uint16_t n_period = currentCountPhaseHRTIM*(phase_shift+delta_period);
+	uint16_t d_duty = 	CHANNEL_PERIOD/CHANNEL_DUTY;
+	uint16_t n_period = COUNT_HRTIM_CHANNEL*(CHANNEL_PERIOD+delta_period);
 	if(n_period<MAX_PERIOD){
-		phase_shift = phase_shift + delta_period;
-		multiPhasePeriodHRTIM = n_period;
-		currentDutyHRTIM = phase_shift / d_duty;
+		CHANNEL_PERIOD = CHANNEL_PERIOD + delta_period;
+		HRTIM_FULL_PERIOD = n_period;
+		CHANNEL_DUTY = CHANNEL_PERIOD / d_duty;
 		upd=1;
 	}
 	else
-	if(currentCountPhaseHRTIM*phase_shift!=MAX_PERIOD){
-		multiPhasePeriodHRTIM = MAX_PERIOD;
-		phase_shift = MAX_PERIOD / currentCountPhaseHRTIM;
-		currentDutyHRTIM = phase_shift / d_duty;
+	if(COUNT_HRTIM_CHANNEL*CHANNEL_PERIOD!=MAX_PERIOD){
+		HRTIM_FULL_PERIOD = MAX_PERIOD;
+		CHANNEL_PERIOD = MAX_PERIOD / COUNT_HRTIM_CHANNEL;
+		CHANNEL_DUTY = CHANNEL_PERIOD / d_duty;
 		upd=1;
 	}
 	if(upd)
@@ -295,43 +316,56 @@ void freq_down(uint16_t delta_period) {
 
 void freq_up(uint16_t delta_period) {
 	uint8_t upd = 0;
-	uint16_t d_duty = 	phase_shift/currentDutyHRTIM;
-	uint16_t n_period = currentCountPhaseHRTIM*(phase_shift-delta_period);
+	uint16_t d_duty = 	CHANNEL_PERIOD/CHANNEL_DUTY;
+	uint16_t n_period = COUNT_HRTIM_CHANNEL*(CHANNEL_PERIOD-delta_period);
 	if(n_period>MIN_PERIOD){
-		multiPhasePeriodHRTIM = n_period;
-		phase_shift = phase_shift - delta_period;
-		currentDutyHRTIM = phase_shift / d_duty;
+		HRTIM_FULL_PERIOD = n_period;
+		CHANNEL_PERIOD = CHANNEL_PERIOD - delta_period;
+		CHANNEL_DUTY = CHANNEL_PERIOD / d_duty;
 		upd=1;
 	}
 	else
-	if(currentCountPhaseHRTIM*phase_shift!=MIN_PERIOD){
-		multiPhasePeriodHRTIM = MIN_PERIOD;
-		phase_shift = MIN_PERIOD / currentCountPhaseHRTIM;
-		currentDutyHRTIM = phase_shift / d_duty;
+	if(COUNT_HRTIM_CHANNEL*CHANNEL_PERIOD!=MIN_PERIOD){
+		HRTIM_FULL_PERIOD = MIN_PERIOD;
+		CHANNEL_PERIOD = MIN_PERIOD / COUNT_HRTIM_CHANNEL;
+		CHANNEL_DUTY = CHANNEL_PERIOD / d_duty;
 		upd=1;
 	}
 	if(upd)
 		set_timing();
 }
 
+void set_duty(int16_t duty){
+	if(duty>0 && duty <= CHANNEL_PERIOD){
+		CHANNEL_DUTY=duty;
+		for(int8_t i=0, index_timer=0; i<COUNT_HRTIM_CHANNEL; i++){
+			// Set period for timer A..E
+			index_timer = activeTimer[i];
+			if(index_timer!=-1){
+				HRTIM1->sTimerxRegs[index_timer].CMP1xR = CHANNEL_DUTY;
+			}
+		}
+	}
+}
+
 void duty_down(uint16_t duty) {
-	currentDutyHRTIM = currentDutyHRTIM>duty?currentDutyHRTIM-duty:0;
-	for(int8_t i=0, index_timer=0; i<MAX_PHASE; i++){
+	CHANNEL_DUTY = CHANNEL_DUTY>duty?CHANNEL_DUTY-duty:0;
+	for(int8_t i=0, index_timer=0; i<COUNT_HRTIM_CHANNEL; i++){
 		// Set period for timer A..E
 		index_timer = activeTimer[i];
 		if(index_timer!=-1){
-			HRTIM1->sTimerxRegs[index_timer].CMP1xR = currentDutyHRTIM;
+			HRTIM1->sTimerxRegs[index_timer].CMP1xR = CHANNEL_DUTY;
 		}
 	}
 }
 
 void duty_up(uint16_t duty) {
-	currentDutyHRTIM = (currentDutyHRTIM+duty>phase_shift)?phase_shift:currentDutyHRTIM+duty;
+	CHANNEL_DUTY = (CHANNEL_DUTY+duty>CHANNEL_PERIOD)?CHANNEL_PERIOD:CHANNEL_DUTY+duty;
 	for(int8_t i=0, index_timer=0; i<MAX_PHASE; i++){
 		// Set period for timer A..E
 		index_timer = activeTimer[i];
 		if(index_timer!=-1){
-			HRTIM1->sTimerxRegs[index_timer].CMP1xR = currentDutyHRTIM;
+			HRTIM1->sTimerxRegs[index_timer].CMP1xR = CHANNEL_DUTY;
 		}
 	}
 }
