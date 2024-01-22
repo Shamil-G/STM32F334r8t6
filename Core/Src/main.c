@@ -20,12 +20,19 @@
 #include "main.h"
 #include "SysTick.h"
 #include "led.h"
+#include "hrtim.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 extern volatile uint32_t led_delay;
 extern int16_t  CHANNEL_DUTY;
 extern uint16_t CHANNEL_PERIOD;
+extern uint16_t HRTIM_FULL_PERIOD;
+extern int16_t  CHANNEL_DUTY;
+extern uint16_t repetition_rate;
+
 uint16_t curr_duty;
+uint32_t curr_freq;
+uint8_t  ticks;
 
 /* USER CODE END Includes */
 
@@ -60,7 +67,8 @@ void startHRTIM(void);
 void freq_up(uint16_t delta_period);
 void freq_down(uint16_t delta_period);
 void duty_down(uint16_t duty);
-void set_duty(int16_t duty);
+void set_duty(uint16_t duty);
+void set_freq(uint32_t freq);
 void init_user_button(void);
 
 /* USER CODE END PFP */
@@ -111,19 +119,28 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   ticks_delay=0;
+  ticks=0;
 
   startHRTIM();
   while (1)
   {
 	if(ticks_delay>=led_delay){
-		LED1_TOGGLE;
-		ticks_delay=0;
+			LED1_TOGGLE;
+			ticks_delay=0;
+//			ticks++;
 
-		curr_duty=(CHANNEL_DUTY!=CHANNEL_PERIOD)?CHANNEL_PERIOD:CHANNEL_PERIOD/2;
-		set_duty(curr_duty);
-
-//		freq_up(1000);
-    }
+			curr_duty=(CHANNEL_DUTY!=CHANNEL_PERIOD)?CHANNEL_PERIOD:CHANNEL_PERIOD/2;
+			set_duty(curr_duty);
+	}
+//	if(ticks_delay>=led_delay && ticks>3){
+//		ticks_delay=0;
+//		ticks++;
+//
+//		curr_freq=(FHRCK/HRTIM_FULL_PERIOD==75000)?100000:75000;
+//		set_freq(curr_freq);
+//		if(ticks>7)
+//			ticks=0;
+//    }
     /* USER CODE END WHILE */
     /* USER CODE BEGIN 3 */
   }

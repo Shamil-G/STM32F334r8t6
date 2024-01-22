@@ -53,3 +53,4 @@ dkms.conf
 Debug/
 Discovery/
 Release/
+.settings/*

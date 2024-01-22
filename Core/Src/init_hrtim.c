@@ -9,6 +9,19 @@
 #include "hrtim.h"
 #include "SysTick.h"
 
+int8_t   activeTimer[] = {	HRTIM_INDEX_TIMER_A,
+							HRTIM_INDEX_TIMER_B,
+							HRTIM_INDEX_TIMER_C,
+//							HRTIM_INDEX_TIMER_D,
+							HRTIM_INDEX_TIMER_E};
+
+volatile uint8_t  COUNT_HRTIM_CHANNEL = sizeof(activeTimer);
+
+volatile uint16_t HRTIM_FULL_PERIOD = PeriodTimer;
+volatile uint16_t CHANNEL_PERIOD = 0;
+volatile int16_t  CHANNEL_DUTY = 8000;
+volatile uint16_t repetition_rate = 0;
+
 void InitGpio_HRTIM(void){
 
     /*
@@ -37,10 +50,6 @@ void InitGpio_HRTIM(void){
     *
     */
 
-	RCC->AHBENR  |= RCC_AHBENR_GPIOAEN;
-	RCC->AHBENR  |= RCC_AHBENR_GPIOBEN;
-//	RCC->AHBENR  |= RCC_AHBENR_GPIOCEN;
-
 //	void InitGPio( GPIO_TypeDef *port, unsigned int NumPin, Moder v_moder, OTyper v_type, Speed v_speed, Pupdr v_pupdr, AF v_af);
 	InitGPio(GPIOA, 8, alternateF, push_pull, veryHigh, pullDown, af13);
 	InitGPio(GPIOA, 9, alternateF, push_pull, veryHigh, pullDown, af13);
@@ -51,33 +60,24 @@ void InitGpio_HRTIM(void){
 	InitGPio(GPIOB, 12, alternateF, push_pull, veryHigh, pullDown, af13);
 	InitGPio(GPIOB, 13, alternateF, push_pull, veryHigh, pullDown, af13);
 
-	InitGPio(GPIOB, 14, alternateF, push_pull, veryHigh, pullDown, af13);
-	InitGPio(GPIOB, 15, alternateF, push_pull, veryHigh, pullDown, af13);
+//	InitGPio(GPIOB, 14, alternateF, push_pull, veryHigh, pullDown, af13);
+//	InitGPio(GPIOB, 15, alternateF, push_pull, veryHigh, pullDown, af13);
 
-//  Channel E do not work
-//	InitGPio(GPIOC, 8, alternateF, push_pull, veryHigh, pullDown, af3);
-//	InitGPio(GPIOC, 9, alternateF, push_pull, veryHigh, pullDown, af3);
+	InitGPio(GPIOC, 8, alternateF, push_pull, veryHigh, pullDown, af3);
+	InitGPio(GPIOC, 9, alternateF, push_pull, veryHigh, pullDown, af3);
 }
 
 // STEP 2
-void set_timing(){
+void set_frequence(){
 	HRTIM1->sMasterRegs.MPER = HRTIM_FULL_PERIOD;
 	HRTIM1->sMasterRegs.MREP = REPETITON_RATE; /* 1 ISR every REPETITON_RATE PWM periods */
-	HRTIM1->sMasterRegs.MCR = HRTIM_MCR_CONT + HRTIM_MCR_PREEN + HRTIM_MCR_MREPU;
-	// Master Repetition Interrupt Enable
-	HRTIM1->sMasterRegs.MDIER = HRTIM_MICR_MREP;
 
-	/* Set compare registers for phase-shifts in master timer */
-	/* Each compare is coding for the phase-shift of one phase */
 	HRTIM1->sMasterRegs.MPER   = HRTIM_FULL_PERIOD;           // Period for master timer
 	HRTIM1->sMasterRegs.MCMP1R = (COUNT_HRTIM_CHANNEL>=1)?CHANNEL_PERIOD:0;    // When using 1 phase with 180 deg
 	HRTIM1->sMasterRegs.MCMP2R = (COUNT_HRTIM_CHANNEL>=2)?CHANNEL_PERIOD*2:0;; // When using 2 phase with 120 deg for channel
 	HRTIM1->sMasterRegs.MCMP3R = (COUNT_HRTIM_CHANNEL>=3)?CHANNEL_PERIOD*3:0;  // When using 3 phase with 90  deg for channel
-	HRTIM1->sMasterRegs.MCMP4R = (COUNT_HRTIM_CHANNEL==4)?CHANNEL_PERIOD*4:0;  // When using 4 phase with 72  deg for channel
+	HRTIM1->sMasterRegs.MCMP4R = (COUNT_HRTIM_CHANNEL>=4)?CHANNEL_PERIOD*4:0;  // When using 4 phase with 72  deg for channel
 
-	/************************************************
-	*                          Setting Period For Timer A..E
-	***********************************************/
 	for(int8_t i=0, index_timer=0; i<COUNT_HRTIM_CHANNEL; i++){
 		// Set period for timer A..E
 		index_timer = activeTimer[i];
@@ -108,6 +108,14 @@ void set_timing(){
 			HRTIM1->sTimerxRegs[index_timer].CMP2xR = CHANNEL_DUTY/2; /* Выборка будет проводится на середине периода (50% of Ton time) */
 		}
 	}
+}
+
+void set_timing(){
+	HRTIM1->sMasterRegs.MCR = HRTIM_MCR_CONT + HRTIM_MCR_PREEN + HRTIM_MCR_MREPU;
+	// Master Repetition Interrupt Enable
+	HRTIM1->sMasterRegs.MDIER = HRTIM_MICR_MREP;
+
+	set_frequence();
 }
 
 // STEP 1
@@ -258,17 +266,9 @@ void initHRTIM(void) {
 		HRTIM1->sCommonRegs.CR2 |= HRTIM_CR2_TASWU
 							   + HRTIM_CR2_TBSWU
 							   + HRTIM_CR2_TCSWU
-							   + HRTIM_CR2_TDSWU
+//							   + HRTIM_CR2_TDSWU
 							   + HRTIM_CR2_TESWU
 							   ;
-
-		/* Default sampling points for 5-phase configuration */
-	/* ---------------*/
-		/* HRTIM start-up */
-		/* ---------------*/
-		/*
-		* Enable output HRPWM channel
-		*/
     }
 }
 
@@ -277,8 +277,8 @@ void initHRTIM(void) {
 void startHRTIM(){
 //	HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TA1OEN | HRTIM_OENR_TA2OEN;  // Enable output PWM channel A
 //	HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TB1OEN | HRTIM_OENR_TB2OEN;  // Enable output PWM channel B
-//	HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TC1OEN | HRTIM_OENR_TC2OEN;  // Enable output PWM channel E
-//	HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TD1OEN | HRTIM_OENR_TD2OEN;  // Enable output PWM channel E
+//	HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TC1OEN | HRTIM_OENR_TC2OEN;  // Enable output PWM channel C
+//	HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TD1OEN | HRTIM_OENR_TD2OEN;  // Enable output PWM channel D
 //	HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TE1OEN | HRTIM_OENR_TE2OEN;  // Enable output PWM channel E
 	uint8_t  index_timer;
 	for(int8_t i=0; i<COUNT_HRTIM_CHANNEL; i++){
@@ -289,53 +289,25 @@ void startHRTIM(){
 	/*
 	* Start Master timer and PWM signal to channel [i]
 	*/
-	HRTIM1->sMasterRegs.MCR |= HRTIM_MCR_MCEN | HRTIM_MCR_TACEN | HRTIM_MCR_TBCEN | HRTIM_MCR_TCCEN | HRTIM_MCR_TDCEN; // | HRTIM_MCR_TECEN;
+	HRTIM1->sMasterRegs.MCR |= HRTIM_MCR_MCEN |
+			HRTIM_MCR_TACEN |
+			HRTIM_MCR_TBCEN |
+			HRTIM_MCR_TCCEN |
+//			HRTIM_MCR_TDCEN |
+			HRTIM_MCR_TECEN; // | HRTIM_MCR_TECEN;
 }
 
 
-void freq_down(uint16_t delta_period) {
-	uint8_t upd = 0;
-	uint16_t d_duty = 	CHANNEL_PERIOD/CHANNEL_DUTY;
-	uint16_t n_period = COUNT_HRTIM_CHANNEL*(CHANNEL_PERIOD+delta_period);
-	if(n_period<MAX_PERIOD){
-		CHANNEL_PERIOD = CHANNEL_PERIOD + delta_period;
-		HRTIM_FULL_PERIOD = n_period;
-		CHANNEL_DUTY = CHANNEL_PERIOD / d_duty;
-		upd=1;
+void set_freq(uint32_t freq){
+	if(FHRCK/freq>=MIN_PERIOD && FHRCK/freq<=MAX_PERIOD){
+		HRTIM_FULL_PERIOD=FHRCK/freq;
+    	CHANNEL_PERIOD = HRTIM_FULL_PERIOD / COUNT_HRTIM_CHANNEL;
+    	set_frequence();
 	}
-	else
-	if(COUNT_HRTIM_CHANNEL*CHANNEL_PERIOD!=MAX_PERIOD){
-		HRTIM_FULL_PERIOD = MAX_PERIOD;
-		CHANNEL_PERIOD = MAX_PERIOD / COUNT_HRTIM_CHANNEL;
-		CHANNEL_DUTY = CHANNEL_PERIOD / d_duty;
-		upd=1;
-	}
-	if(upd)
-		set_timing();
 }
 
-void freq_up(uint16_t delta_period) {
-	uint8_t upd = 0;
-	uint16_t d_duty = 	CHANNEL_PERIOD/CHANNEL_DUTY;
-	uint16_t n_period = COUNT_HRTIM_CHANNEL*(CHANNEL_PERIOD-delta_period);
-	if(n_period>MIN_PERIOD){
-		HRTIM_FULL_PERIOD = n_period;
-		CHANNEL_PERIOD = CHANNEL_PERIOD - delta_period;
-		CHANNEL_DUTY = CHANNEL_PERIOD / d_duty;
-		upd=1;
-	}
-	else
-	if(COUNT_HRTIM_CHANNEL*CHANNEL_PERIOD!=MIN_PERIOD){
-		HRTIM_FULL_PERIOD = MIN_PERIOD;
-		CHANNEL_PERIOD = MIN_PERIOD / COUNT_HRTIM_CHANNEL;
-		CHANNEL_DUTY = CHANNEL_PERIOD / d_duty;
-		upd=1;
-	}
-	if(upd)
-		set_timing();
-}
 
-void set_duty(int16_t duty){
+void set_duty(uint16_t duty){
 	if(duty>0 && duty <= CHANNEL_PERIOD){
 		CHANNEL_DUTY=duty;
 		for(int8_t i=0, index_timer=0; i<COUNT_HRTIM_CHANNEL; i++){
@@ -348,24 +320,3 @@ void set_duty(int16_t duty){
 	}
 }
 
-void duty_down(uint16_t duty) {
-	CHANNEL_DUTY = CHANNEL_DUTY>duty?CHANNEL_DUTY-duty:0;
-	for(int8_t i=0, index_timer=0; i<COUNT_HRTIM_CHANNEL; i++){
-		// Set period for timer A..E
-		index_timer = activeTimer[i];
-		if(index_timer!=-1){
-			HRTIM1->sTimerxRegs[index_timer].CMP1xR = CHANNEL_DUTY;
-		}
-	}
-}
-
-void duty_up(uint16_t duty) {
-	CHANNEL_DUTY = (CHANNEL_DUTY+duty>CHANNEL_PERIOD)?CHANNEL_PERIOD:CHANNEL_DUTY+duty;
-	for(int8_t i=0, index_timer=0; i<MAX_PHASE; i++){
-		// Set period for timer A..E
-		index_timer = activeTimer[i];
-		if(index_timer!=-1){
-			HRTIM1->sTimerxRegs[index_timer].CMP1xR = CHANNEL_DUTY;
-		}
-	}
-}

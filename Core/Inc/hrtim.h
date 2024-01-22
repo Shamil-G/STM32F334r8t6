@@ -19,7 +19,7 @@
 #define PeriodTimer 	((uint16_t)61440) // f = 75,000 kHz, phase_shift(4) = 18750
 
 #define MAX_PERIOD 61440
-#define MIN_PERIOD 45000
+#define MIN_PERIOD 46080
 
 
 
@@ -27,19 +27,11 @@
 #define ADC_CONVERSION_TIME     ((uint16_t)0x480)
 #define REPETITON_RATE ((uint32_t)   31) /* Define the interrupt rate vs switching frequency */
 
-#define HRTIM_INDEX_TIMER_A 0
-#define HRTIM_INDEX_TIMER_B 1
-#define HRTIM_INDEX_TIMER_C 2
-#define HRTIM_INDEX_TIMER_D 3
-#define HRTIM_INDEX_TIMER_E 4
-
-
-volatile uint16_t HRTIM_FULL_PERIOD = PeriodTimer;
-volatile uint16_t CHANNEL_PERIOD = 0;
-volatile int16_t  CHANNEL_DUTY = 8000;
-volatile uint16_t repetition_rate = 0;
-int8_t   activeTimer[] = {HRTIM_INDEX_TIMER_A, HRTIM_INDEX_TIMER_B, HRTIM_INDEX_TIMER_C, HRTIM_INDEX_TIMER_D};
-volatile uint8_t  COUNT_HRTIM_CHANNEL = sizeof(activeTimer);
+#define HRTIM_INDEX_TIMER_A 0x0U
+#define HRTIM_INDEX_TIMER_B 0x1U
+#define HRTIM_INDEX_TIMER_C 0x2U
+#define HRTIM_INDEX_TIMER_D 0x3U
+#define HRTIM_INDEX_TIMER_E 0x4U
 
 
 void initHRTIM();
