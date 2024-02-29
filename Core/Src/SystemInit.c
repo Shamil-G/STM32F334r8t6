@@ -2,7 +2,7 @@
  * SystemInit.c
  *
  *  Created on: Oct 31, 2023
- *      Author: Gusseynov-G
+ *  Author: Shamil Gusseynov
  */
 
 #include "main.h"

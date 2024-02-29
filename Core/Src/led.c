@@ -2,7 +2,7 @@
  * manage_pin.c
  *
  *  Created on: 22 дек. 2019 г.
- *      Author: sguss
+ *  Author: Shamil Gusseynov
  */
 #include "main.h"
 #include "led.h"

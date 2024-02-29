@@ -20,14 +20,10 @@
 #include "main.h"
 #include "SysTick.h"
 #include "led.h"
-#include "hrtim.h"
+#include "init_hrtim.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 extern volatile uint32_t led_delay;
-extern int16_t  CHANNEL_DUTY;
-extern uint16_t CHANNEL_PERIOD;
-extern uint16_t HRTIM_FULL_PERIOD;
-extern int16_t  CHANNEL_DUTY;
 extern uint16_t repetition_rate;
 
 uint16_t curr_duty;

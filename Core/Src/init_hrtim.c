@@ -2,14 +2,15 @@
  * init_hrtim.c
  *
  *  Created on: Oct 29, 2023
- *      Author: sguss
+ *  Author: Shamil Gusseynov
  */
+
 #include "main.h"
 #include "gpio.h"
-#include "hrtim.h"
+#include "init_hrtim.h"
 #include "SysTick.h"
 
-int8_t   activeTimer[] = {	HRTIM_INDEX_TIMER_A,
+volatile int8_t activeTimer[] = {	HRTIM_INDEX_TIMER_A,
 							HRTIM_INDEX_TIMER_B,
 							HRTIM_INDEX_TIMER_C,
 //							HRTIM_INDEX_TIMER_D,
@@ -91,7 +92,7 @@ void set_frequence(){
 
 
 			HRTIM1->sTimerxRegs[index_timer].REPxR = repetition_rate;
-			HRTIM1->sTimerxRegs[index_timer].TIMxCR = HRTIM_TIMCR_MSTU 	// Обновление регистра инииируется Master таймером
+			HRTIM1->sTimerxRegs[index_timer].TIMxCR = HRTIM_TIMCR_MSTU 	// Обновление регистра инициируется Master таймером
 													+ HRTIM_TIMCR_CONT
 //														+ HRTIM_TIMCR_RETRIG 	// Таймер имеет возможность повторного запуска: сброс счетчика выполняется независимо от его состояния.
 									    			+ HRTIM_TIMCR_PREEN 	// Enable preload register

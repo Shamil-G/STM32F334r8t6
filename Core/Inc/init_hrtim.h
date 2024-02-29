@@ -1,12 +1,10 @@
+#pragma once
 /*
  * hrtim.h
  *
- *  Created on: Nov 11, 2023
- *      Author: sguss
+ * Created on: Nov 11, 2023
+ * Author: Shamil Gusseynov
  */
-
-#ifndef INC_HRTIM_H_
-#define INC_HRTIM_H_
 
 #define MAX_PHASE 3
 
@@ -21,8 +19,6 @@
 #define MAX_PERIOD 61440
 #define MIN_PERIOD 46080
 
-
-
 #define DLL_CALIBRATIONTIMEOUT ((uint32_t)   10)        /* Timeout in ms */
 #define ADC_CONVERSION_TIME     ((uint16_t)0x480)
 #define REPETITON_RATE ((uint32_t)   31) /* Define the interrupt rate vs switching frequency */
@@ -33,9 +29,11 @@
 #define HRTIM_INDEX_TIMER_D 0x3U
 #define HRTIM_INDEX_TIMER_E 0x4U
 
-
 void initHRTIM();
 void startHRTIM();
 
-
-#endif /* INC_HRTIM_H_ */
+volatile extern int16_t  CHANNEL_DUTY;
+volatile extern uint16_t CHANNEL_PERIOD;
+volatile extern uint16_t HRTIM_FULL_PERIOD;
+volatile extern int16_t  CHANNEL_DUTY;
+volatile extern int8_t   activeTimer[];

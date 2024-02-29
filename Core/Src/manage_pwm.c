@@ -2,7 +2,7 @@
  * manage_pwm.c
  *
  *  Created on: Jan 17, 2024
- *      Author: sguss
+ *  Author: Shamil Gusseynov
  */
 #include "stdio.h"
 
